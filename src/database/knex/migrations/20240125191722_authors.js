@@ -4,7 +4,6 @@ exports.up = (knex) => {
     table.increments('id').primary();
     table.string('name').notNullable();
     table.string('lastname').notNullable();
-    table.integer('post_id').references('id').inTable('posts');
   })
 };
 

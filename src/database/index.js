@@ -5,7 +5,7 @@ const pool = mysql.createPool({
     user: 'root',
     password: '',
     database: 'blog'
-}).promise()
+})
 
 async function connection() {
     await pool.connect((err) => {
