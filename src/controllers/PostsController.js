@@ -1,49 +1,59 @@
-const { pool } = require("../database");
+const knex = require("../database/knex");
 
 class PostsController {
     async createPosts(req, res) {
         const {title, content, tags} = req.body;
-        const [result] = await pool.query(`
-            INSERT INTO posts (title, content, tags) VALUES (?, ?, ?)
-        `, [title, content, tags])
+        const {author_id} = req.params
 
-        res.status(201).json(result);
+        const [post_id] = await knex('posts').insert({
+            title,
+            content,
+            author_id
+        })
+
+        const tagsInsert = tags.map((name)=> {
+            return res.json({
+                post_id,
+                name
+            })
+        })
+
+        await knex('tags').insert(tagsInsert)
+
+        res.status(201).json('Registro criado com sucesso');
     }
-
-    async listAllPosts(req, res) {
-        const [rows] = await pool.query(`
-            SELECT * FROM posts
-        `);
-
-        res.status(200).json(rows)
-    };
 
     async listPostsById(req, res) {
-        const {id} = req.params;
-        const [rows] = await pool.query(`
-            SELECT * FROM posts WHERE id = ${id};
-        `);
+        const { id} = req.params
 
-        res.status(200).json(rows);
+        const post = await knex('posts').where({ id }).first()
+        const tags = await knex('tags').where({post_id: id}).orderBy('name')
+
+        return res.json({
+            ...post,
+            tags,
+        })
     }
 
-    async listPostsByTitle(req, res) {
-        const {title} = req.body;
-        const [rows] = await pool.query(`
-            SELECT * FROM posts WHERE title = ${title};
-        `)
+    async deletePost(req, res) {
+        const {id} = req.params
 
-        res.status(200).json(rows);
+        await knex('posts').where({id}).delete()
+
+        res.status(200).json('Post deletado com sucesso')
     }
 
-    async deletePosts(req, res) {
-        const {id} = req.params;
-        await pool.query(`
-            DELETE FROM posts WHERE id = ${id}
-        `)
+    async updatePost(req, res) {
+        const {title, content} = req.body
+        const {id} = req.params
 
-        res.status(200).json("Post deletado com sucesso");
+        await knex('authors').where({id}).update({title, content})
+
+        res.status(200).json("Registro atualizado com sucesso")
+
     }
 }
+
+
 
 module.exports = PostsController;
